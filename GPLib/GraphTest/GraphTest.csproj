@@ -82,6 +82,16 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Drawables\Drawables.csproj">
+      <Project>{71452148-876E-4B8E-9244-A8F014CF72E6}</Project>
+      <Name>Drawables</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Math\Math3D.csproj">
+      <Project>{0BC4671F-FF72-4D3E-9889-44382F6C64F2}</Project>
+      <Name>Math3D</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

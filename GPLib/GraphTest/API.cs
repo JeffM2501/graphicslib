@@ -2,9 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 using OpenTK.Graphics;
 using OpenTK;
+
+using Drawables.Cameras;
+
 //using OpenTK.Graphics.OpenGL;
 using System.Drawing;
 
@@ -18,6 +22,48 @@ namespace GraphTest
             form = f;
 
             form.glControl1.Resize += new EventHandler(glControl1_Resize);
+            form.MouseDown += new System.Windows.Forms.MouseEventHandler(form_MouseDown);
+            form.MouseUp += new System.Windows.Forms.MouseEventHandler(form_MouseUp);
+            form.MouseMove += new System.Windows.Forms.MouseEventHandler(form_MouseMove);
+            form.MouseWheel += new System.Windows.Forms.MouseEventHandler(form_MouseWheel);
+        }
+
+        void form_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            double thisPos = e.Delta / 120;
+            LastMoveArgs.WheelDelta = e.Delta / 120;
+            LastMoveArgs.Wheel += LastMoveArgs.WheelDelta;
+
+            if (MouseMove != null)
+                MouseMove(LastMoveArgs);
+        }
+
+        void form_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            Vector2 v = new Vector2(e.X,e.Y);
+
+            LastMoveArgs.PosDelta = v - LastMoveArgs.Position;
+            LastMoveArgs.Position = v;
+            if (MouseMove != null)
+                MouseMove(LastMoveArgs);
+        }
+
+        void form_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            LastMoveArgs.Buttons[0] = !(e.Button == MouseButtons.Left);
+            LastMoveArgs.Buttons[1] = !(e.Button == MouseButtons.Right);
+            LastMoveArgs.Buttons[2] = !(e.Button == MouseButtons.Middle);
+            LastMoveArgs.Buttons[3] = !(e.Button == MouseButtons.XButton1);
+            LastMoveArgs.Buttons[4] = !(e.Button == MouseButtons.XButton2);
+       }
+
+        void form_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            LastMoveArgs.Buttons[0] = e.Button == MouseButtons.Left;
+            LastMoveArgs.Buttons[1] = e.Button == MouseButtons.Right;
+            LastMoveArgs.Buttons[2] = e.Button == MouseButtons.Middle;
+            LastMoveArgs.Buttons[3] = e.Button == MouseButtons.XButton1;
+            LastMoveArgs.Buttons[4] = e.Button == MouseButtons.XButton2;
         }
 
         void glControl1_Resize(object sender, EventArgs e)
@@ -28,6 +74,33 @@ namespace GraphTest
 
         public delegate void EmptyHandler ( EventArgs args );
         public delegate void MenuHandler ( EventArgs args, string menu );
+        public delegate void MouseButtonHandler( EventArgs args, bool down , int button);
+        public delegate void MouseMoveHandler(MouseMoveArgs args);
+
+        public class MouseMoveArgs : EventArgs
+        {
+            public Vector2 Position = Vector2.Zero;
+            public Vector2 PosDelta = Vector2.Zero;
+            public double Wheel = 0;
+            public double WheelDelta = 0;
+            public bool[] Buttons = new bool[5];
+        }
+
+        private MouseMoveArgs LastMoveArgs = new MouseMoveArgs();
+
+        public Vector2 MousePosition
+        {
+            get { return LastMoveArgs.Position; }
+        }
+
+        public double MouseWheelPosition
+        {
+            get { return LastMoveArgs.Wheel; }
+        }
+
+        public event MouseMoveHandler MouseMove;
+
+        public event MouseButtonHandler MouseButton;
 
         public event EmptyHandler Resize;
 
@@ -97,7 +170,7 @@ namespace GraphTest
 
     public class StandardGLViewModule : Module
     {
-        public override string Name() { return string.Empty; }
+        public override string Name() { return "StandardGLViewModule"; }
 
         protected double FOV = 45;
         protected double Hither = 1;
@@ -109,6 +182,7 @@ namespace GraphTest
 
         public override void Init(bool first)
         {
+            ClearColor = Color.DarkGray;
             API.SetCurrent();
             Load(first);
 
@@ -143,7 +217,6 @@ namespace GraphTest
         void API_Resize(EventArgs args)
         {
             GL.Viewport(0, 0, API.Width, API.Height); // Use all of the glControl painting area  
-            SetPerspective();
         }
 
         protected void SetPerspective()
@@ -170,14 +243,10 @@ namespace GraphTest
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            SetPerspective();
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
-
-            SetCamera(time);
+            SetCamera(time,true);
             Draw3D(time);
 
-            SetOrthographic();
+            SetCamera(time, false);
             DrawOverlay(time);
 
             API.SwapBuffers();
@@ -200,16 +269,22 @@ namespace GraphTest
         {
         }
 
-        public virtual void SetCamera(double time)
+        public virtual void SetCamera(double time, bool perspective)
         {
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
+            if (perspective)
+            {
+                SetPerspective();
+                GL.MatrixMode(MatrixMode.Modelview);
+                GL.LoadIdentity();
 
-            GL.Translate(0, 0, -10);						// pull back on allong the zoom vector
-            GL.Rotate(0, 1.0f, 0.0f, 0.0f);					// pops us to the tilt
-            GL.Rotate(0, 0.0f, 1.0f, 0.0f);					// gets us on our rot
-            GL.Translate(0, 0, 0);	                        // take us to the pos
-            GL.Rotate(-90, 1.0f, 0.0f, 0.0f);				// gets us into XY
+                GL.Translate(0, 0, -10);						// pull back on allong the zoom vector
+                GL.Rotate(0, 1.0f, 0.0f, 0.0f);					// pops us to the tilt
+                GL.Rotate(0, 0.0f, 1.0f, 0.0f);					// gets us on our rot
+                GL.Translate(0, 0, 0);	                        // take us to the pos
+                GL.Rotate(-90, 1.0f, 0.0f, 0.0f);				// gets us into XY
+            }
+            else
+                SetOrthographic();
         }
 
         public virtual void Draw3D(double time)
@@ -249,17 +324,38 @@ namespace GraphTest
     {
         public override string Name() { return "MouseCameraModule"; }
 
-        public virtual void Load(bool first)
+        protected Camera TheCamera = new Camera();
+
+        public override void Load(bool first)
         {
-            ClearColor = Color.Black;
+            API.Resize += new ViewAPI.EmptyHandler(API_Resize);
+            ClearColor = Color.Blue;
         }
 
-        public virtual void SetCamera(double time)
+        public override void SetGLOptons()
         {
-         
+            base.SetGLOptons();
+            TheCamera.set(new Vector3(0, 0, 0), 0, 0);
+            TheCamera.Resize(API.Width, API.Height);
         }
 
-        public virtual void Draw3D(double time)
+        void API_Resize(EventArgs args)
+        {
+            TheCamera.Resize(API.Width, API.Height);
+        }
+
+        public override void SetCamera(double time, bool perspective)
+        {
+            if (perspective)
+            {
+                TheCamera.SetPersective();
+                TheCamera.Execute();
+            }
+            else
+                TheCamera.SetOrthographic();
+        }
+
+        public override void Draw3D(double time)
         {
             GL.Disable(EnableCap.Texture2D);
             GL.Disable(EnableCap.Lighting);
@@ -287,7 +383,7 @@ namespace GraphTest
             GL.DepthMask(true);
         }
 
-        public virtual void DrawOverlay(double time)
+        public override void DrawOverlay(double time)
         {
         }
     }

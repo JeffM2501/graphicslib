@@ -88,8 +88,8 @@ namespace GraphTest
                 if (!t.IsAbstract && t.IsSubclassOf(typeof(Module)))
                 {
                     Module m = (Module)Activator.CreateInstance(t);
-                    if (t.Name != string.Empty)
-                        Modules.Add(t.Name, t);
+                    if (m.Name() != string.Empty)
+                        Modules.Add(m.Name(), t);
                 }
             }
         }
