@@ -22,10 +22,10 @@ namespace GraphTest
             form = f;
 
             form.glControl1.Resize += new EventHandler(glControl1_Resize);
-            form.MouseDown += new System.Windows.Forms.MouseEventHandler(form_MouseDown);
-            form.MouseUp += new System.Windows.Forms.MouseEventHandler(form_MouseUp);
-            form.MouseMove += new System.Windows.Forms.MouseEventHandler(form_MouseMove);
-            form.MouseWheel += new System.Windows.Forms.MouseEventHandler(form_MouseWheel);
+            form.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(form_MouseDown);
+            form.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(form_MouseUp);
+            form.glControl1.MouseMove += new System.Windows.Forms.MouseEventHandler(form_MouseMove);
+            form.glControl1.MouseWheel += new System.Windows.Forms.MouseEventHandler(form_MouseWheel);
         }
 
         void form_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -50,20 +50,78 @@ namespace GraphTest
 
         void form_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
         {
-            LastMoveArgs.Buttons[0] = !(e.Button == MouseButtons.Left);
-            LastMoveArgs.Buttons[1] = !(e.Button == MouseButtons.Right);
-            LastMoveArgs.Buttons[2] = !(e.Button == MouseButtons.Middle);
-            LastMoveArgs.Buttons[3] = !(e.Button == MouseButtons.XButton1);
-            LastMoveArgs.Buttons[4] = !(e.Button == MouseButtons.XButton2);
+            if (e.Button == MouseButtons.Left)
+            {
+                LastMoveArgs.Buttons[0] = false;
+                if (MouseUp != null)
+                    MouseUp(EventArgs.Empty, 0);
+            }
+
+            if (e.Button == MouseButtons.Right)
+            {
+                LastMoveArgs.Buttons[1] = false;
+                if (MouseUp != null)
+                    MouseUp(EventArgs.Empty, 1);
+            }
+
+            if (e.Button == MouseButtons.Middle)
+            {
+                LastMoveArgs.Buttons[2] = false;
+                if (MouseUp != null)
+                    MouseUp(EventArgs.Empty, 2);
+            }
+
+            if (e.Button == MouseButtons.XButton1)
+            {
+                LastMoveArgs.Buttons[3] = false;
+                if (MouseUp != null)
+                    MouseUp(EventArgs.Empty, 3);
+            }
+
+            if (e.Button == MouseButtons.XButton2)
+            {
+                LastMoveArgs.Buttons[4] = false;
+                if (MouseUp != null)
+                    MouseUp(EventArgs.Empty,4);
+            }
        }
 
         void form_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
         {
-            LastMoveArgs.Buttons[0] = e.Button == MouseButtons.Left;
-            LastMoveArgs.Buttons[1] = e.Button == MouseButtons.Right;
-            LastMoveArgs.Buttons[2] = e.Button == MouseButtons.Middle;
-            LastMoveArgs.Buttons[3] = e.Button == MouseButtons.XButton1;
-            LastMoveArgs.Buttons[4] = e.Button == MouseButtons.XButton2;
+            if (e.Button == MouseButtons.Left)
+            {
+                LastMoveArgs.Buttons[0] = true;
+                if (MouseDown != null)
+                    MouseDown(EventArgs.Empty, 0);
+            }
+
+            if (e.Button == MouseButtons.Right)
+            {
+                LastMoveArgs.Buttons[1] = true;
+                if (MouseDown != null)
+                    MouseDown(EventArgs.Empty, 1);
+            }
+
+            if (e.Button == MouseButtons.Middle)
+            {
+                LastMoveArgs.Buttons[2] = true;
+                if (MouseDown != null)
+                    MouseDown(EventArgs.Empty, 2);
+            }
+
+            if (e.Button == MouseButtons.XButton1)
+            {
+                LastMoveArgs.Buttons[3] = true;
+                if (MouseDown != null)
+                    MouseDown(EventArgs.Empty, 3);
+            }
+
+            if (e.Button == MouseButtons.XButton2)
+            {
+                LastMoveArgs.Buttons[4] = true;
+                if (MouseDown != null)
+                    MouseDown(EventArgs.Empty, 4);
+            }
         }
 
         void glControl1_Resize(object sender, EventArgs e)
@@ -74,7 +132,7 @@ namespace GraphTest
 
         public delegate void EmptyHandler ( EventArgs args );
         public delegate void MenuHandler ( EventArgs args, string menu );
-        public delegate void MouseButtonHandler( EventArgs args, bool down , int button);
+        public delegate void MouseButtonHandler( EventArgs args, int button);
         public delegate void MouseMoveHandler(MouseMoveArgs args);
 
         public class MouseMoveArgs : EventArgs
@@ -100,7 +158,7 @@ namespace GraphTest
 
         public event MouseMoveHandler MouseMove;
 
-        public event MouseButtonHandler MouseButton;
+        public event MouseButtonHandler MouseDown, MouseUp;
 
         public event EmptyHandler Resize;
 
@@ -140,6 +198,11 @@ namespace GraphTest
         {
             return form.AddMenu(name, handler, parrent);
         }
+
+        public void Invalidate ()
+        {
+            form.glControl1.Invalidate();
+        }
     }
 
     public class Module
@@ -170,7 +233,7 @@ namespace GraphTest
 
     public class StandardGLViewModule : Module
     {
-        public override string Name() { return "StandardGLViewModule"; }
+        public override string Name() { return String.Empty; }
 
         protected double FOV = 45;
         protected double Hither = 1;
@@ -320,9 +383,126 @@ namespace GraphTest
         }
     }
 
+    public class MouseInspectionCameraModule : StandardGLViewModule
+    {
+        public override string Name() { return "MouseInspectionCamera"; }
+
+        protected bool UseMouse = true;
+
+        protected Vector3 ViewPosition = Vector3.Zero;
+        protected double Spin = 0;
+        protected double Tilt = 0;
+        protected double Pullback = 10;
+
+        protected bool DrawGrid = true;
+        protected double GridSize = 1.0;
+        protected double GridBounds = 25.0;
+
+        protected double WheelIncrement = 0.025;
+        public override void Load(bool first)
+        {
+            ClearColor = Color.WhiteSmoke;
+            API.MouseMove += new ViewAPI.MouseMoveHandler(API_MouseMove);
+        }
+
+        void API_MouseMove(ViewAPI.MouseMoveArgs args)
+        {
+            if (!UseMouse)
+                return;
+
+            if (args.Buttons[1])
+            {
+                Spin -= args.PosDelta.X;
+                Tilt += args.PosDelta.Y;
+            }
+            Pullback += args.WheelDelta * WheelIncrement;
+            if (Pullback < 0)
+                Pullback = 0;
+
+            API.Invalidate();
+        }
+
+        public override void SetCamera(double time, bool perspective)
+        {
+            if (perspective)
+            {
+                base.SetPerspective();
+                GL.MatrixMode(MatrixMode.Modelview);
+                GL.LoadIdentity();
+
+                GL.Translate(0, 0, -Pullback);						// pull back on allong the zoom vector
+                GL.Rotate(Tilt, 1.0f, 0.0f, 0.0f);					// pops us to the tilt
+                GL.Rotate(-Spin, 0.0f, 1.0f, 0.0f);					// gets us on our rot
+                GL.Translate(-ViewPosition.X, -ViewPosition.Z, ViewPosition.Y);	                        // take us to the pos
+                GL.Rotate(-90, 1.0f, 0.0f, 0.0f);				    // gets us into XY
+            }
+            else
+                base.SetOrthographic();
+        }
+
+        public override void Draw3D(double time)
+        {
+            if (!DrawGrid)
+                return;
+
+            GL.Disable(EnableCap.Texture2D);
+            GL.Disable(EnableCap.Lighting);
+            GL.Disable(EnableCap.LineSmooth);
+
+            GL.LineWidth(2);
+            GL.Begin(BeginMode.Lines);
+
+                GL.Color3(Color.DarkGray);
+                for (double i = -GridBounds; i <= GridBounds; i += GridSize)
+                {
+                    if (i != 0)
+                    {
+                        GL.Vertex3(-GridBounds, i, 0);
+                        GL.Vertex3(GridBounds, i, 0);
+                        GL.Vertex3(i, -GridBounds, 0);
+                        GL.Vertex3(i, GridBounds, 0);
+                    }
+                    else
+                    {
+                        GL.Vertex3(-GridBounds, i, 0);
+                        GL.Vertex3(-GridSize, i, 0);
+                        GL.Vertex3(GridBounds, i, 0);
+                        GL.Vertex3(GridSize, i, 0);
+                        GL.Vertex3(i, -GridBounds, 0);
+                        GL.Vertex3(i, -GridSize, 0);
+                        GL.Vertex3(i, GridBounds, 0);
+                        GL.Vertex3(i, GridSize, 0);
+                    }
+                }
+
+                GL.Color3(Color.Red);
+                GL.Vertex3(-GridSize, 0, 0);
+                GL.Vertex3(GridSize, 0, 0);
+                GL.Vertex3(GridSize, 0, 0);
+                GL.Vertex3(GridSize * 0.75, GridSize * 0.125, 0);
+
+                GL.Color3(Color.Green);
+                GL.Vertex3(0, -GridSize, 0);
+                GL.Vertex3(0, GridSize, 0);
+                GL.Vertex3(0, GridSize, 0);
+                GL.Vertex3(GridSize * 0.125, GridSize * 0.75, 0);
+
+                GL.Color3(Color.Blue);
+                GL.Vertex3(0, 0, -GridSize);
+                GL.Vertex3(0, 0, GridSize*2);
+
+            GL.End();
+
+            GL.Enable(EnableCap.LineSmooth);
+            GL.PopMatrix();
+            GL.Enable(EnableCap.Lighting);
+            GL.DepthMask(true);
+        }
+    }
+
     public class MouseCameraModule : StandardGLViewModule
     {
-        public override string Name() { return "MouseCameraModule"; }
+        public override string Name() { return "MouseFrustumCameraModule"; }
 
         protected Camera TheCamera = new Camera();
 
