@@ -27,10 +27,15 @@ namespace Utilities.Paths
     {
         public static List<string> SearchPaths = new List<string>();
 
+        public static void KillPaths ()
+        {
+            SearchPaths.Clear();
+        }
+
         public static void AddPath ( string path )
         {
             if (Directory.Exists(path))
-                SearchPaths.Add(new DirectoryInfo(path).FullName);
+                SearchPaths.Insert(0,new DirectoryInfo(path).FullName);
         }
 
         public static string FindFile(string name)
