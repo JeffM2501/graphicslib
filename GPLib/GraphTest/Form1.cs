@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Linq;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Reflection;
+
+using Utilities.Paths;
 
 namespace GraphTest
 {
@@ -27,9 +29,15 @@ namespace GraphTest
 
         protected ViewAPI API;
 
-        protected Module CurrentModule = null;
+        public Module CurrentModule = null;
 
-        protected Dictionary<string, Type> Modules = new Dictionary<string, Type>();
+        protected class ModuleDef
+        {
+            public Type t;
+            public string path;
+        }
+
+        protected Dictionary<string, ModuleDef> Modules = new Dictionary<string, ModuleDef>();
 
         public Timer FPSTimer = new Timer();
 
@@ -45,18 +53,19 @@ namespace GraphTest
             LastMenuID++;
             ModuleMenu menu = new ModuleMenu();
             menu.Name = name;
-            menu.Handler = handler;
-            menu.Menu = new ToolStripMenuItem(name);
-            menu.Menu.Click +=new EventHandler(Menu_Click);
-            menu.Menu.Tag = menu;
-
+           
             ModuleMenus.Add(LastMenuID, menu);
 
-            ToolStripMenuItem p = optionsToolStripMenuItem;
             if (ModuleMenus.ContainsKey(parrent))
-                p = ModuleMenus[parrent].Menu;
-
-            p.DropDownItems.Add(menu.Menu);
+            {
+                menu.Handler = handler;
+                menu.Menu = new ToolStripMenuItem(name);
+                menu.Menu.Click += new EventHandler(Menu_Click);
+                menu.Menu.Tag = menu;
+                ModuleMenus[parrent].Menu.DropDownItems.Add(menu.Menu);
+            }
+            else
+                PluginMenuStrip.Items.Add(name);
             return LastMenuID;
         }
 
@@ -89,16 +98,20 @@ namespace GraphTest
                 {
                     Module m = (Module)Activator.CreateInstance(t);
                     if (m.Name() != string.Empty)
-                        Modules.Add(m.Name(), t);
+                    {
+                        ModuleDef md = new ModuleDef();
+                        md.t = t;
+                        md.path = dll.Location;
+                        Modules.Add(m.Name(), md);
+                    }
                 }
             }
         }
 
         protected void LoadModuleMenus ()
         {
-            moduleToolStripMenuItem.DropDownItems.Clear();
-
-            foreach (KeyValuePair<string,Type> module in Modules)
+            PluginMenuStrip.Items.Clear();
+            foreach (KeyValuePair<string,ModuleDef> module in Modules)
             {
                 ToolStripMenuItem menu = new ToolStripMenuItem(module.Key);
                 menu.Click += new EventHandler(menu_Click);
@@ -113,14 +126,27 @@ namespace GraphTest
                 return;
 
             ModuleMenus.Clear();
-            optionsToolStripMenuItem.DropDownItems.Clear();
+            PluginMenuStrip.Items.Clear();
             LastMenuID = 0;
         }
 
-        void LoadModule ( Type t )
+        void LoadModule ( ModuleDef md )
         {
             UnloadModule();
-            CurrentModule = (Module)Activator.CreateInstance(t);
+
+            // executable dir
+            ResourceManager.KillPaths();
+            ResourceManager.AddPath(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "data"));
+            ResourceManager.AddPath(Path.GetDirectoryName(Application.CommonAppDataPath));
+
+            CurrentModule = (Module)Activator.CreateInstance(md.t);
+            DirectoryInfo appDir = new DirectoryInfo(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), CurrentModule.Name()));
+            if (!appDir.Exists)
+                appDir.Create();
+
+            ResourceManager.AddPath(appDir.FullName);
+            ResourceManager.AddPath(md.path);
+
             CurrentModule.Create(API);
             this.Text = CurrentModule.Name();
         }
@@ -130,9 +156,9 @@ namespace GraphTest
             ToolStripMenuItem menu = sender as ToolStripMenuItem;
             if (menu != null)
             {
-                Type t = menu.Tag as Type;
-                if (t != null)
-                    LoadModule(t);
+                ModuleDef md = menu.Tag as ModuleDef;
+                if (md != null)
+                    LoadModule(md);
             }
         }
 
@@ -144,7 +170,7 @@ namespace GraphTest
 
             if (Modules.Count > 0)
             {
-                foreach(KeyValuePair<string,Type> m in Modules)
+                foreach (KeyValuePair<string, ModuleDef> m in Modules)
                 {
                     LoadModule(m.Value);
                     break;

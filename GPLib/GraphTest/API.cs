@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
@@ -11,6 +11,7 @@ using Drawables.Cameras;
 
 //using OpenTK.Graphics.OpenGL;
 using System.Drawing;
+using Utilities.Paths;
 
 namespace GraphTest
 {
@@ -36,6 +37,8 @@ namespace GraphTest
 
             if (MouseMove != null)
                 MouseMove(LastMoveArgs);
+
+            LastMoveArgs.WheelDelta = 0;
         }
 
         void form_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -46,6 +49,8 @@ namespace GraphTest
             LastMoveArgs.Position = v;
             if (MouseMove != null)
                 MouseMove(LastMoveArgs);
+
+            LastMoveArgs.PosDelta = Vector2.Zero;
         }
 
         void form_MouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -202,6 +207,36 @@ namespace GraphTest
         public void Invalidate ()
         {
             form.glControl1.Invalidate();
+        }
+
+        public void AddPath ( string path )
+        {
+            ResourceManager.AddPath(path);
+        }
+
+        public FileInfo GetModuleDataFile( string name )
+        {
+            return new FileInfo(Path.Combine(Path.Combine(Application.CommonAppDataPath, form.CurrentModule.Name()),name));
+        }
+
+        public string GetFile(string name)
+        {
+            return ResourceManager.FindFile(name);
+        }
+
+        public  List<string> GetFiles(string path)
+        {
+            return ResourceManager.FindFiles(path, string.Empty);
+        }
+
+        public List<string> GetFiles(string path, string filter)
+        {
+            return ResourceManager.FindFiles(path, filter);
+        }
+
+        public string GetDirectory(string name)
+        {
+            return ResourceManager.FindDirectory(name);
         }
     }
 
@@ -398,7 +433,7 @@ namespace GraphTest
         protected double GridSize = 1.0;
         protected double GridBounds = 25.0;
 
-        protected double WheelIncrement = 0.025;
+        protected double WheelIncrement = 0.25;
         public override void Load(bool first)
         {
             ClearColor = Color.WhiteSmoke;
