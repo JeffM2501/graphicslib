@@ -136,16 +136,16 @@ namespace GraphTest
 
             // executable dir
             ResourceManager.KillPaths();
-            ResourceManager.AddPath(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "data"));
-            ResourceManager.AddPath(Path.GetDirectoryName(Application.CommonAppDataPath));
 
             CurrentModule = (Module)Activator.CreateInstance(md.t);
-            DirectoryInfo appDir = new DirectoryInfo(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), CurrentModule.Name()));
+            DirectoryInfo appDir = new DirectoryInfo(Path.Combine(Path.GetDirectoryName(Application.CommonAppDataPath), CurrentModule.Name()));
             if (!appDir.Exists)
                 appDir.Create();
-
             ResourceManager.AddPath(appDir.FullName);
-            ResourceManager.AddPath(md.path);
+
+            ResourceManager.AddPath(Path.GetDirectoryName(Application.CommonAppDataPath));
+            ResourceManager.AddPath(Path.Combine(Path.GetDirectoryName(md.path),"data"));
+            ResourceManager.AddPath(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "data"));
 
             CurrentModule.Create(API);
             this.Text = CurrentModule.Name();
@@ -162,10 +162,27 @@ namespace GraphTest
             }
         }
 
+        private void LoadModulesDir ()
+        {
+            string path = string.Empty;
+            if (Directory.Exists(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath),"modules")))
+                path = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath),"modules");
+            else if (Directory.Exists(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "../../modules")))
+                path = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "../../modules");
+
+            if (path != string.Empty)
+            {
+                DirectoryInfo dir = new DirectoryInfo(path);
+                foreach (FileInfo file in dir.GetFiles("*.dll"))
+                    LoadModules(Assembly.LoadFrom(file.FullName));
+            }
+        }
+
         private void glControl1_Load(object sender, EventArgs e)
         {
             API = new ViewAPI(this);
             LoadModules(Assembly.GetExecutingAssembly());
+            LoadModulesDir();
             LoadModuleMenus();
 
             if (Modules.Count > 0)
@@ -208,6 +225,17 @@ namespace GraphTest
         {
             if (CurrentModule != null)
                 CurrentModule.Close();
+        }
+
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            
+            if (ofd.ShowDialog(this) == DialogResult.OK)
+            {
+                LoadModules(Assembly.LoadFile(ofd.FileName));
+                LoadModuleMenus();
+            }
         }
     }
 }

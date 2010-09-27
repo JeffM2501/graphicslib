@@ -348,6 +348,7 @@ namespace GraphTest
             DrawOverlay(time);
 
             API.SwapBuffers();
+            EndFrame(time);
         }
 
         public override void Close()
@@ -364,6 +365,10 @@ namespace GraphTest
         }
 
         public virtual void UnLoad()
+        {
+        }
+
+        public virtual void EndFrame(double time)
         {
         }
 
@@ -420,14 +425,14 @@ namespace GraphTest
 
     public class MouseInspectionCameraModule : StandardGLViewModule
     {
-        public override string Name() { return "MouseInspectionCamera"; }
+        public override string Name() { return string.Empty; }
 
-        protected bool UseMouse = true;
+        public bool UseMouse = true;
 
-        protected Vector3 ViewPosition = Vector3.Zero;
-        protected double Spin = 0;
-        protected double Tilt = 0;
-        protected double Pullback = 10;
+        public Vector3 ViewPosition = Vector3.Zero;
+        public double Spin = 0;
+        public double Tilt = 0;
+        public double Pullback = 10;
 
         protected bool DrawGrid = true;
         protected double GridSize = 1.0;
@@ -537,7 +542,7 @@ namespace GraphTest
 
     public class MouseCameraModule : StandardGLViewModule
     {
-        public override string Name() { return "MouseFrustumCameraModule"; }
+        public override string Name() { return string.Empty; }
 
         protected Camera TheCamera = new Camera();
 

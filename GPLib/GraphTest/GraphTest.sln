@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drawables", "..\Drawables\D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utilities", "..\Utilities\Utilities.csproj", "{1CD2C5DC-F417-41D6-9704-CCC0FB501BF3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P51Movie", "P51Movie\P51Movie.csproj", "{91E89FD8-8642-4602-B966-EED9C85DCC58}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,14 @@ Global
 		{1CD2C5DC-F417-41D6-9704-CCC0FB501BF3}.Release|x64.Build.0 = Release|x64
 		{1CD2C5DC-F417-41D6-9704-CCC0FB501BF3}.Release|x86.ActiveCfg = Release|x86
 		{1CD2C5DC-F417-41D6-9704-CCC0FB501BF3}.Release|x86.Build.0 = Release|x86
+		{91E89FD8-8642-4602-B966-EED9C85DCC58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91E89FD8-8642-4602-B966-EED9C85DCC58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91E89FD8-8642-4602-B966-EED9C85DCC58}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{91E89FD8-8642-4602-B966-EED9C85DCC58}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{91E89FD8-8642-4602-B966-EED9C85DCC58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91E89FD8-8642-4602-B966-EED9C85DCC58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91E89FD8-8642-4602-B966-EED9C85DCC58}.Release|x64.ActiveCfg = Release|Any CPU
+		{91E89FD8-8642-4602-B966-EED9C85DCC58}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
