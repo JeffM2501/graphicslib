@@ -86,7 +86,8 @@ namespace Drawables.Textures
 
         public void Invalidate()
         {
-            listID.Invalidate();
+            if (listID.Valid())
+                listID.Invalidate();
 
             if(boundID != -1)
                 GL.DeleteTexture(boundID);
