@@ -1,21 +1,21 @@
 ﻿/*
-    Open Combat/Projekt 2501
-    Copyright (C) 2010  Jeffery Allen Myers
+Open Combat/Projekt 2501
+Copyright (C) 2010  Jeffery Allen Myers
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +40,7 @@ namespace Drawables.StaticModels
         {
         }
 
-        public FaceVert( int v, int n, int u)
+        public FaceVert(int v, int n, int u)
         {
             vert = v;
             normal = n;
@@ -71,14 +71,14 @@ namespace Drawables.StaticModels
         [System.Xml.Serialization.XmlIgnoreAttribute]
         public Dictionary<string, MeshGroup> groupMap = new Dictionary<string, MeshGroup>();
 
-        private void checkGroupMap ()
+        private void checkGroupMap()
         {
             if (groupMap.Count == groups.Count)
                 return;
 
             groupMap.Clear();
             foreach (MeshGroup group in groups)
-                groupMap.Add(group.name,group);
+                groupMap.Add(group.name, group);
         }
 
         public void SwapYZ()
@@ -90,7 +90,7 @@ namespace Drawables.StaticModels
                 normals[i] = new Vector3(normals[i].X, -normals[i].Z, normals[i].Y);
         }
 
-        public void build ( )
+        public void build()
         {
             foreach (MeshGroup group in groups)
                 build(group);
@@ -108,7 +108,7 @@ namespace Drawables.StaticModels
                 buildWireframe(group);
         }
 
-        public void build ( List<string> hiddenGroups )
+        public void build(List<string> hiddenGroups)
         {
             checkGroupMap();
 
@@ -119,7 +119,7 @@ namespace Drawables.StaticModels
             }
         }
 
-        public void build ( MeshGroup group )
+        public void build(MeshGroup group)
         {
             foreach (Face f in group.faces)
             {
@@ -179,19 +179,19 @@ namespace Drawables.StaticModels
             GL.PolygonMode(MaterialFace.Front, PolygonMode.Fill);
         }
 
-        public void build ( string groupName )
+        public void build(string groupName)
         {
             checkGroupMap();
-   
+
             build(groupMap[groupName]);
         }
 
-        protected MeshGroup getGroup ( string name )
+        protected MeshGroup getGroup(string name)
         {
             if (groupMap.ContainsKey(name))
                 return groupMap[name];
 
-            foreach( MeshGroup group in groups)
+            foreach (MeshGroup group in groups)
             {
                 if (group.name == name)
                 {
@@ -208,7 +208,7 @@ namespace Drawables.StaticModels
             return g;
         }
 
-        public void addFace ( string groupName, Face face )
+        public void addFace(string groupName, Face face)
         {
             getGroup(groupName).faces.Add(face);
         }
@@ -218,7 +218,7 @@ namespace Drawables.StaticModels
             if (!verts.Contains(v))
             {
                 verts.Add(v);
-                return verts.Count-1;
+                return verts.Count - 1;
             }
 
             return verts.IndexOf(v);
@@ -229,7 +229,7 @@ namespace Drawables.StaticModels
             if (!normals.Contains(v))
             {
                 normals.Add(v);
-                return normals.Count-1;
+                return normals.Count - 1;
             }
 
             return normals.IndexOf(v);
@@ -240,14 +240,14 @@ namespace Drawables.StaticModels
             if (!uvs.Contains(v))
             {
                 uvs.Add(v);
-                return uvs.Count-1;
+                return uvs.Count - 1;
             }
 
             return uvs.IndexOf(v);
         }
     }
 
-    public class StaticModel 
+    public class StaticModel
     {
         public string name = string.Empty;
 
@@ -267,9 +267,9 @@ namespace Drawables.StaticModels
         {
             foreach (Mesh m in meshes)
                 m.material = system.GetMaterial(m.material);
-        }    
+        }
 
-        public void addMaterial (Material mat)
+        public void addMaterial(Material mat)
         {
             if (meshMap.ContainsKey(mat))
                 return;
@@ -290,12 +290,12 @@ namespace Drawables.StaticModels
             return;
         }
 
-        public Mesh getMesh (Material mat)
+        public Mesh getMesh(Material mat)
         {
             if (meshMap.ContainsKey(mat))
                 return meshMap[mat];
 
-            foreach(Mesh m in meshes)
+            foreach (Mesh m in meshes)
             {
                 if (m.material == mat)
                 {
@@ -330,7 +330,7 @@ namespace Drawables.StaticModels
             return null;
         }
 
-        public void Invalidate ()
+        public void Invalidate()
         {
             foreach (KeyValuePair<Material, DisplayList> m in geoLists)
                 m.Value.Invalidate();
@@ -343,18 +343,18 @@ namespace Drawables.StaticModels
                 m.material.Invalidate();
         }
 
-        void Rebuild ()
+        void Rebuild()
         {
             Rebuild(true);
         }
 
-        void Rebuild ( bool extraLists )
+        void Rebuild(bool extraLists)
         {
             bool oneBad = false;
             if (meshes.Count != geoLists.Count)
                 oneBad = true;
 
-            foreach (KeyValuePair<Material,DisplayList> l in geoLists)
+            foreach (KeyValuePair<Material, DisplayList> l in geoLists)
             {
                 if (!l.Value.Valid())
                     oneBad = true;
@@ -391,7 +391,12 @@ namespace Drawables.StaticModels
             displayWireframeList.End();
         }
 
-        public void drawAll ( )
+        public void drawAll()
+        {
+            drawAll(true);
+        }
+
+        public void drawAll(bool useMats)
         {
             if (meshes.Count == 0)
                 return;
@@ -399,12 +404,13 @@ namespace Drawables.StaticModels
             Rebuild();
             foreach (Mesh m in meshes)
             {
-               m.material.Execute();
-               geoLists[m.material].Call();
+                if (useMats)
+                    m.material.Execute();
+                geoLists[m.material].Call();
             }
         }
 
-        public void draw ( Mesh mesh )
+        public void draw(Mesh mesh)
         {
             if (meshes.Count == 0)
                 return;
@@ -413,7 +419,7 @@ namespace Drawables.StaticModels
             geoLists[mesh.material].Call();
         }
 
-        protected void drawAllExtras ( bool normals, bool wireframe )
+        protected void drawAllExtras(bool normals, bool wireframe)
         {
             GL.Disable(EnableCap.Texture2D);
             GL.Disable(EnableCap.Lighting);
@@ -432,7 +438,7 @@ namespace Drawables.StaticModels
             GL.Enable(EnableCap.Lighting);
         }
 
-        public void drawAll ( bool normals, bool wireframe )
+        public void drawAll(bool normals, bool wireframe)
         {
             if (meshes.Count == 0)
                 return;
@@ -441,13 +447,13 @@ namespace Drawables.StaticModels
             drawAllExtras(normals, wireframe);
         }
 
-        public void clear ()
+        public void clear()
         {
             Invalidate();
             meshes.Clear();
         }
 
-        public bool valid ()
+        public bool valid()
         {
             return meshes.Count > 0;
         }
@@ -465,7 +471,7 @@ namespace Drawables.StaticModels
             }
         }
 
-        public void scale( float factor)
+        public void scale(float factor)
         {
             Invalidate();
 
