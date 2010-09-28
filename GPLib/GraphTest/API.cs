@@ -13,6 +13,8 @@ using Drawables.Cameras;
 using System.Drawing;
 using Utilities.Paths;
 
+using Math3D;
+
 namespace GraphTest
 {
     public class ViewAPI
@@ -379,15 +381,7 @@ namespace GraphTest
                 SetPerspective();
                 GL.MatrixMode(MatrixMode.Modelview);
                 GL.LoadIdentity();
-
-                GL.Translate(0, 0, -10);						// pull back on allong the zoom vector
-                GL.Rotate(0, 1.0f, 0.0f, 0.0f);					// pops us to the tilt
-                GL.Rotate(0, 0.0f, 1.0f, 0.0f);					// gets us on our rot
-                GL.Translate(0, 0, 0);	                        // take us to the pos
                 GL.Rotate(-90, 1.0f, 0.0f, 0.0f);				// gets us into XY
-
-                Vector4 lightPos = new Vector4(-5f, 5f, 25f, 1.0f);
-                GL.Light(LightName.Light0, LightParameter.Position, lightPos);
             }
             else
                 SetOrthographic();
@@ -458,11 +452,38 @@ namespace GraphTest
                 Spin -= args.PosDelta.X;
                 Tilt += args.PosDelta.Y;
             }
+
+            if (args.Buttons[0])
+            {
+                Vector2 viewHeading = VectorHelper2.FromAngle(Spin+90);
+                Vector2 crossHeading = VectorHelper2.FromAngle(Spin-180);
+
+                float factor = 0.2f;
+                if (Pullback > 0.2f)
+                    factor = (float)Pullback;
+
+                factor *= 0.005f;
+
+                float YFactor = (float)Tilt / 90.0f;
+                if (YFactor < 0)
+                    YFactor = 0;
+                if (YFactor > 1)
+                    YFactor = 1;
+
+                ViewPosition.X += ((viewHeading.X * args.PosDelta.Y * YFactor) + (crossHeading.X * args.PosDelta.X)) * factor;
+                ViewPosition.Y += ((viewHeading.Y * args.PosDelta.Y * YFactor) + (crossHeading.Y * args.PosDelta.X)) * factor;
+            }
             Pullback += args.WheelDelta * WheelIncrement;
             if (Pullback < 0)
                 Pullback = 0;
 
             API.Invalidate();
+        }
+
+        public virtual void SetBillboard()
+        {
+            GL.Rotate(Spin, 0, 0, 1);
+            GL.Rotate(-Tilt, 1, 0, 0);
         }
 
         public override void SetCamera(double time, bool perspective)
@@ -477,6 +498,9 @@ namespace GraphTest
                 GL.Rotate(-Spin, 0.0f, 1.0f, 0.0f);					// gets us on our rot
                 GL.Translate(-ViewPosition.X, -ViewPosition.Z, ViewPosition.Y);	                        // take us to the pos
                 GL.Rotate(-90, 1.0f, 0.0f, 0.0f);				    // gets us into XY
+
+                Vector4 lightPos = new Vector4(-5f, 5f, 25f, 1.0f);
+                GL.Light(LightName.Light0, LightParameter.Position, lightPos);
             }
             else
             {

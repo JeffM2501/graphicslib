@@ -11,6 +11,7 @@ using Drawables.Textures;
 using Drawables.DisplayLists;
 using Drawables.StaticModels;
 using Drawables.StaticModels.OBJ;
+using Math3D;
 
 namespace P51Movie
 {
@@ -70,8 +71,8 @@ namespace P51Movie
 
     public class Sceene
     {
-        protected ViewAPI API;
-        protected Module TheModule;
+        public static ViewAPI API;
+        public static Module TheModule;
 
         public Sceene( ViewAPI api, Module m)
         {
@@ -101,51 +102,77 @@ namespace P51Movie
 
     public class BZFlagDanceView : Sceene
     {
-        Texture grass = null;
-        Texture walls = null;
+        List<PathDrivenTank> Tanks = new List<PathDrivenTank>();
 
-        Texture TankSkin = null;
-        Texture TankShadow = null;
-
-        ListableEvent GrassList;
-        ListableEvent WallList;
-
-        StaticModel TankMesh;
-
-        TankModel Tank;
-
-        Clouds Cloud = null;
-        MoutainRenderer Moutains;
-
-        BuildingRenderer buildingRenderer;
-
+        BZGround Ground;
         double LastUpdate = 0;
-
-        double CloudShift = 0;
-        double CloudSpeed = 0.125;
-
+      
         public BZFlagDanceView(ViewAPI api, Module m) : base(api, m) { }
+
+        protected void LoadTanks()
+        {
+            Texture shadow = TextureSystem.system.GetTexture(API.GetFile("model/shadow.png"));
+            
+            Texture blue = TextureSystem.system.GetTexture(API.GetFile("model/blue.png"));
+            Texture red = TextureSystem.system.GetTexture(API.GetFile("model/red.png"));
+            Texture green = TextureSystem.system.GetTexture(API.GetFile("model/green.png"));
+            Texture purple = TextureSystem.system.GetTexture(API.GetFile("model/purple.png"));
+
+            StaticModel mesh = OBJFile.Read(API.GetFile("model/tank.obj"));
+
+            List<TankModel> models = new List<TankModel>();
+
+            models.Add(new TankModel(mesh, red, shadow));
+            models.Add(new TankModel(mesh, green, shadow));
+            models.Add(new TankModel(mesh, blue, shadow));
+            models.Add(new TankModel(mesh, purple, shadow));
+
+            List<Texture> Shots = new List<Texture>();
+            Shots.Add(TextureSystem.system.GetTexture(API.GetFile("img/shots/red.png")));
+            Shots.Add(TextureSystem.system.GetTexture(API.GetFile("img/shots/green.png")));
+            Shots.Add(TextureSystem.system.GetTexture(API.GetFile("img/shots/blue.png")));
+            Shots.Add(TextureSystem.system.GetTexture(API.GetFile("img/shots/purple.png")));
+
+            int count = 5;
+
+            Random rand = new Random();
+
+            float spread = 25.0f;
+
+            for( int i = 0; i < count; i++)
+            {
+                int index = rand.Next(models.Count);
+                if (index >= models.Count)
+                    index = 0;
+
+                Tank tank = new Tank(models[index]);
+                PathDrivenTank SampleTank = new PathDrivenTank(tank, Shots[index]);
+
+                SampleTank.InitalRot = FloatHelper.Random(360);
+                SampleTank.InitalPos = new Vector3(FloatHelper.Random(-spread, spread), FloatHelper.Random(-spread, spread), 0);
+
+                SampleTank.Segments.Add(new PathDrivenTank.PathSegment(PathDrivenTank.PathSegment.SegmentType.Delay, Vector2.Zero, FloatHelper.Random(3)));
+                SampleTank.Segments.Add(new PathDrivenTank.PathSegment(PathDrivenTank.PathSegment.SegmentType.Drive, new Vector2(0, FloatHelper.Random(-1, 1)), FloatHelper.Random(1, 2)));
+                SampleTank.Segments.Add(new PathDrivenTank.PathSegment(PathDrivenTank.PathSegment.SegmentType.Drive, new Vector2(1, FloatHelper.Random(-1, 1)), FloatHelper.Random(1, 3)));
+                SampleTank.Segments.Add(new PathDrivenTank.PathSegment(PathDrivenTank.PathSegment.SegmentType.Jump, new Vector2(0, FloatHelper.Random(-1, 1)), 0));
+                SampleTank.Segments.Add(new PathDrivenTank.PathSegment(PathDrivenTank.PathSegment.SegmentType.Delay, Vector2.Zero, FloatHelper.Random(-1,1)));
+                SampleTank.Segments.Add(new PathDrivenTank.PathSegment(PathDrivenTank.PathSegment.SegmentType.Shoot, Vector2.Zero, 0));
+                SampleTank.Segments.Add(new PathDrivenTank.PathSegment(PathDrivenTank.PathSegment.SegmentType.WaitTillLand, Vector2.Zero, 0));
+                SampleTank.Segments.Add(new PathDrivenTank.PathSegment(PathDrivenTank.PathSegment.SegmentType.Shoot, Vector2.Zero, 0));
+                SampleTank.Segments.Add(new PathDrivenTank.PathSegment(PathDrivenTank.PathSegment.SegmentType.Drive, new Vector2(-1, FloatHelper.Random(-1, 1)), 2));
+
+                SampleTank.Loop = true;
+
+                Tanks.Add(SampleTank);
+            }           
+        }
 
         public override void Load()
         {
             GL.ClearColor(Color.SkyBlue);
-
-            grass = TextureSystem.system.GetTexture(API.GetFile("img/grass.png"));
-            GrassList = new ListableEvent(new ListableEvent.GenerateEventHandler(GrassList_Generate));
-
-            walls = TextureSystem.system.GetTexture(API.GetFile("img/wall.png"));
-            WallList = new ListableEvent(new ListableEvent.GenerateEventHandler(WallList_Generate));
-            
-            TankSkin = TextureSystem.system.GetTexture(API.GetFile("model/blue.png"));
-            TankMesh = OBJFile.Read(API.GetFile("model/tank.obj"));
-            TankShadow = TextureSystem.system.GetTexture(API.GetFile("model/shadow.png"));
-
-            Tank = new TankModel(TankMesh, TankSkin, TankShadow);
-
-            Moutains = new MoutainRenderer(API.GetDirectory("img/moutain"));
-            Cloud = new Clouds(TextureSystem.system.GetTexture(API.GetFile("img/clouds.png")));
-
-            buildingRenderer = new BuildingRenderer(TextureSystem.system.GetTexture(API.GetFile("img/boxwall.png")), TextureSystem.system.GetTexture(API.GetFile("img/roof.png")));
+            Ground = new BZGround();
+            Ground.Load();
+            LoadTanks();
 
             TheModule.ViewPosition = new Vector3(0, -1, 2);
             TheModule.Spin = 45;
@@ -165,148 +192,23 @@ namespace P51Movie
             if (LastUpdate != 0)
                 delta = time - LastUpdate;
 
-            Cloud.Animate(time);
+            Ground.Animate(time);
 
+            foreach(PathDrivenTank tank in Tanks)
+                tank.Update(time, delta);
             LastUpdate = time;
         }
 
         public override void Draw3D(double time)
         {
             Animate(time);
-            DrawBackground(time);
+            Ground.Draw(time);
 
-            TheModule.SetCamera(time, true);
-            GL.Enable(EnableCap.Texture2D);
-            GL.Enable(EnableCap.Lighting);
-            GL.Enable(EnableCap.Light0);
-
-            Tank.Update(new Vector3(0f, 0f, 0f), (float)time * 20.0f);
-            DrawFlatGround();
-
-            GL.Enable(EnableCap.Lighting);
-            buildingRenderer.Draw(new Vector3(10, 10, 0), new Vector3(5, 5, 5), 0);
-
-            Tank.Draw();
-        }
-
-        protected void DrawFlatGround()
-        {
-            GL.Color4(Color.White);
-            grass.Bind();
-            GrassList.Call();
-            walls.Bind();
-            WallList.Call();
-            Moutains.Draw();
-            Cloud.Draw();
-        }
-
-        double worldSize = 100;
-        double wallHeight = 5;
-        double floorZ = -0.01;
-
-        void GrassList_Generate(object sender, DisplayList list)
-        {
-            GL.Begin(BeginMode.Quads);
-            GL.Normal3(0, 0, 1.0);
-
-            double worldSize = 100;
-            double texSize = 8;
-
-            GL.TexCoord2(-worldSize / texSize, -worldSize / texSize);
-            GL.Vertex3(-worldSize, -worldSize, floorZ);
-
-            GL.TexCoord2(worldSize / texSize, -worldSize / texSize);
-            GL.Vertex3(worldSize, -worldSize, floorZ);
-
-            GL.TexCoord2(worldSize / texSize, worldSize / texSize);
-            GL.Vertex3(worldSize, worldSize, floorZ);
-
-            GL.TexCoord2(-worldSize / texSize, worldSize / texSize);
-            GL.Vertex3(-worldSize, worldSize, floorZ);
-
-            // big ground
-            double bigFactor = 4;
-            GL.TexCoord2(-worldSize * bigFactor / texSize, -worldSize * bigFactor / texSize);
-            GL.Vertex3(-worldSize * bigFactor, -worldSize * bigFactor, floorZ * 2);
-
-            GL.TexCoord2(worldSize * bigFactor / texSize, -worldSize * bigFactor / texSize);
-            GL.Vertex3(worldSize * bigFactor, -worldSize * bigFactor, floorZ * 2);
-
-            GL.TexCoord2(worldSize * bigFactor / texSize, worldSize * bigFactor / texSize);
-            GL.Vertex3(worldSize * bigFactor, worldSize * bigFactor, floorZ * 2);
-
-            GL.TexCoord2(-worldSize * bigFactor / texSize, worldSize * bigFactor / texSize);
-            GL.Vertex3(-worldSize * bigFactor, worldSize * bigFactor, floorZ*2);
-
-            GL.End();
-        }
-
-        void WallList_Generate(object sender, DisplayList list)
-        {
-            double texSize =5;
-            GL.Begin(BeginMode.Quads);
-                
-                // X+
-                GL.Normal3(-1, 0, 0);
-
-                GL.TexCoord2(worldSize / texSize, 0);
-                GL.Vertex3(worldSize, worldSize, floorZ);
-
-                GL.TexCoord2(-worldSize / texSize, 0);
-                GL.Vertex3(worldSize, -worldSize, floorZ);
-
-                GL.TexCoord2(-worldSize / texSize, wallHeight/texSize);
-                GL.Vertex3(worldSize, -worldSize, texSize);
-
-                GL.TexCoord2(worldSize / texSize, wallHeight / texSize);
-                GL.Vertex3(worldSize, worldSize, texSize);
-
-                //X-
-                GL.Normal3(1, 0, 0);
-
-                GL.TexCoord2(worldSize / texSize, wallHeight / texSize);
-                GL.Vertex3(-worldSize, worldSize, texSize);
-
-                GL.TexCoord2(-worldSize / texSize, wallHeight / texSize);
-                GL.Vertex3(-worldSize, -worldSize, texSize);
-
-                GL.TexCoord2(-worldSize / texSize, 0);
-                GL.Vertex3(-worldSize, -worldSize, floorZ);
-                
-                GL.TexCoord2(worldSize / texSize, 0);
-                GL.Vertex3(-worldSize, worldSize, floorZ);
-
-                // Y+
-                GL.Normal3(-1, 0, 0);
-
-                GL.TexCoord2(worldSize / texSize, 0);
-                GL.Vertex3(worldSize, worldSize, floorZ);
-
-                GL.TexCoord2(worldSize / texSize, wallHeight / texSize);
-                GL.Vertex3(worldSize, worldSize, texSize);
-
-                GL.TexCoord2(-worldSize / texSize, wallHeight / texSize);
-                GL.Vertex3(-worldSize, worldSize, texSize);
-
-                GL.TexCoord2(-worldSize / texSize, 0);
-                GL.Vertex3(-worldSize, worldSize, floorZ);
-
-                // Y-
-                GL.Normal3(1, 0, 0);
-
-                GL.TexCoord2(-worldSize / texSize, 0);
-                GL.Vertex3(-worldSize, -worldSize, floorZ);
-
-                GL.TexCoord2(-worldSize / texSize, wallHeight / texSize);
-                GL.Vertex3(-worldSize, -worldSize, texSize);
-
-                GL.TexCoord2(worldSize / texSize, wallHeight / texSize);
-                GL.Vertex3(worldSize, -worldSize, texSize);
-
-                GL.TexCoord2(worldSize / texSize, 0);
-                GL.Vertex3(worldSize, -worldSize, floorZ);
-
-            GL.End();
+            foreach (PathDrivenTank tank in Tanks)
+                tank.DrawTrans(time);
+          
+            foreach (PathDrivenTank tank in Tanks)
+                tank.Draw(time);
         }
     }
 }
