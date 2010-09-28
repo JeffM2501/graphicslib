@@ -80,11 +80,6 @@ namespace GraphTest
             }
         }
 
-        private void x600ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-        }
-
         protected void SetNow ()
         {
             Now = RuntimeTimer.ElapsedMilliseconds / 1000.0;
@@ -236,6 +231,39 @@ namespace GraphTest
                 LoadModules(Assembly.LoadFile(ofd.FileName));
                 LoadModuleMenus();
             }
+        }
+
+        protected void SetGLTo(int X, int Y)
+        {
+            int XOffset = this.Width - glControl1.Width;
+            int YOffset = this.Height - glControl1.Height;
+
+            this.Size = new Size(X + XOffset, Y + YOffset);
+        }
+
+        private void x600ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetGLTo(800, 600);
+        }
+
+        private void x768ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SetGLTo(1024, 768);
+        }
+
+        private void toolStripMenuItem2_Click(object sender, EventArgs e)
+        {
+            SetGLTo(720, 480);
+        }
+
+        private void toolStripMenuItem3_Click(object sender, EventArgs e)
+        {
+            SetGLTo(1280, 720);
+        }
+
+        private void toolStripMenuItem4_Click(object sender, EventArgs e)
+        {
+            SetGLTo(1920, 1080);
         }
     }
 }

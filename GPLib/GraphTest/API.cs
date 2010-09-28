@@ -467,7 +467,6 @@ namespace GraphTest
             if (perspective)
             {
                 base.SetPerspective();
-                GL.MatrixMode(MatrixMode.Modelview);
                 GL.LoadIdentity();
 
                 GL.Translate(0, 0, -Pullback);						// pull back on allong the zoom vector
@@ -477,7 +476,10 @@ namespace GraphTest
                 GL.Rotate(-90, 1.0f, 0.0f, 0.0f);				    // gets us into XY
             }
             else
+            {
                 base.SetOrthographic();
+                GL.LoadIdentity();
+            }
         }
 
         public override void Draw3D(double time)
