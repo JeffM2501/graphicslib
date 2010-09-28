@@ -247,6 +247,48 @@ namespace Drawables.Textures
             GL.End();
         }
 
+        public void DrawCentered(float width, float height)
+        {
+            Bind();
+            GL.Begin(BeginMode.Quads);
+
+            GL.Normal3(0, 0, 1);
+            GL.TexCoord2(0, 1);
+            GL.Vertex2(-width * 0.5, -height * 0.5);
+
+            GL.TexCoord2(1, 1);
+            GL.Vertex2(width * 0.5, -height * 0.5);
+
+            GL.TexCoord2(1, 0);
+            GL.Vertex2(width * 0.5, height * 0.5);
+
+            GL.TexCoord2(0, 0);
+            GL.Vertex2(-width * 0.5, height * 0.5);
+
+            GL.End();
+        }
+
+        public void DrawCenteredXZ(float width, float height)
+        {
+            Bind();
+            GL.Begin(BeginMode.Quads);
+
+            GL.Normal3(0, 0, 1);
+            GL.TexCoord2(0, 1);
+            GL.Vertex3(-width * 0.5, 0, -height * 0.5);
+
+            GL.TexCoord2(1, 1);
+            GL.Vertex3(width * 0.5, 0, -height * 0.5);
+
+            GL.TexCoord2(1, 0);
+            GL.Vertex3(width * 0.5, 0, height * 0.5);
+
+            GL.TexCoord2(0, 0);
+            GL.Vertex3(-width * 0.5, 0, height * 0.5);
+
+            GL.End();
+        }
+
         public void Draw(float width, float height, float ppu)
         {
             Bind();
