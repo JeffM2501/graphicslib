@@ -114,8 +114,10 @@ namespace P51Movie
 
         TankModel Tank;
 
-        Texture Clouds = null;
+        Clouds Cloud = null;
         MoutainRenderer Moutains;
+
+        BuildingRenderer buildingRenderer;
 
         double LastUpdate = 0;
 
@@ -141,8 +143,9 @@ namespace P51Movie
             Tank = new TankModel(TankMesh, TankSkin, TankShadow);
 
             Moutains = new MoutainRenderer(API.GetDirectory("img/moutain"));
-            Clouds = TextureSystem.system.GetTexture(API.GetFile("img/clouds.png"));
-            Clouds.mipmap = false;
+            Cloud = new Clouds(TextureSystem.system.GetTexture(API.GetFile("img/clouds.png")));
+
+            buildingRenderer = new BuildingRenderer(TextureSystem.system.GetTexture(API.GetFile("img/boxwall.png")), TextureSystem.system.GetTexture(API.GetFile("img/roof.png")));
 
             TheModule.ViewPosition = new Vector3(0, -1, 2);
             TheModule.Spin = 45;
@@ -152,26 +155,7 @@ namespace P51Movie
         protected void DrawBackground(double time)
         {
             TheModule.SetCamera(time, false);
-            GL.Disable(EnableCap.Lighting);
-            GL.Disable(EnableCap.Texture2D);
-
-            GL.DepthMask(false);
-
-            GL.Begin(BeginMode.Quads);
-
-            GL.Color4(Color.MidnightBlue);
-            GL.Normal3(0, 0, 1);
-            GL.Vertex2(0, 0);
-            GL.Vertex2(API.Width, 0);
-
-            GL.Color4(Color.SkyBlue);
-            GL.Vertex2(API.Width, API.Height);
-            GL.Vertex2(0, API.Height);
-
-            GL.End();
-            GL.Color4(Color.White);
-
-            GL.DepthMask(true);
+            Background.Draw(time,API);
         }
 
         void Animate(double time)
@@ -181,7 +165,7 @@ namespace P51Movie
             if (LastUpdate != 0)
                 delta = time - LastUpdate;
 
-            CloudShift += CloudSpeed * delta;
+            Cloud.Animate(time);
 
             LastUpdate = time;
         }
@@ -199,117 +183,10 @@ namespace P51Movie
             Tank.Update(new Vector3(0f, 0f, 0f), (float)time * 20.0f);
             DrawFlatGround();
 
-            Tank.Draw();
-        }
-
-        protected void DrawClouds()
-        {
-            if (Clouds == null)
-                return;
-
-            GL.MatrixMode(MatrixMode.Texture);
-            GL.Translate(CloudShift, 0, 0);
-            GL.MatrixMode(MatrixMode.Modelview);
-
-            Clouds.Bind();
-            GL.Disable(EnableCap.Lighting);
-
-            double innerSize = 50.0;
-            double outerSize = 500.0;
-            double height = 60.0;
-
-            double UVSize = 60.0;
-
-            double soldAlpha = 0.5;
-
-            GL.Begin(BeginMode.Quads);
-
-            GL.Color4(1.0, 1.0, 1.0, soldAlpha);
-
-            // core
-            GL.TexCoord2(-innerSize / UVSize, innerSize / UVSize);
-            GL.Vertex3(-innerSize, innerSize, height);
-
-            GL.TexCoord2(innerSize / UVSize, innerSize / UVSize);
-            GL.Vertex3(innerSize, innerSize, height);
-
-            GL.TexCoord2(innerSize / UVSize, -innerSize / UVSize);
-            GL.Vertex3(innerSize, -innerSize, height);
-
-            GL.TexCoord2(-innerSize / UVSize, -innerSize / UVSize);
-            GL.Vertex3(-innerSize, -innerSize, height);
-
-            // X+
-            GL.Color4(1.0, 1.0, 1.0, soldAlpha);
-            GL.TexCoord2(innerSize / UVSize, innerSize / UVSize);
-            GL.Vertex3(innerSize, innerSize, height);
-
-            GL.Color4(1.0, 1.0, 1.0, 0.0);
-            GL.TexCoord2(outerSize / UVSize, outerSize / UVSize);
-            GL.Vertex3(outerSize, outerSize, height);
-
-            GL.TexCoord2(outerSize / UVSize, -outerSize / UVSize);
-            GL.Vertex3(outerSize, -outerSize, height);
-
-            GL.Color4(1.0, 1.0, 1.0, soldAlpha);
-            GL.TexCoord2(innerSize / UVSize, -innerSize / UVSize);
-            GL.Vertex3(innerSize, -innerSize, height);
-
-            // X-
-            GL.Color4(1.0, 1.0, 1.0, 0);
-            GL.TexCoord2(-outerSize / UVSize, outerSize / UVSize);
-            GL.Vertex3(-outerSize, outerSize, height);
-
-            GL.Color4(1.0, 1.0, 1.0, soldAlpha);
-            GL.TexCoord2(-innerSize / UVSize, innerSize / UVSize);
-            GL.Vertex3(-innerSize, innerSize, height);
-
-            GL.TexCoord2(-innerSize / UVSize, -innerSize / UVSize);
-            GL.Vertex3(-innerSize, -innerSize, height);
-
-            GL.Color4(1.0, 1.0, 1.0, 0);
-            GL.TexCoord2(-outerSize / UVSize, -outerSize / UVSize);
-            GL.Vertex3(-outerSize, -outerSize, height);
-
-            // Y+
-            GL.Color4(1.0, 1.0, 1.0, 0);
-            GL.TexCoord2(-outerSize / UVSize, outerSize / UVSize);
-            GL.Vertex3(-outerSize, outerSize, height);
-
-            GL.TexCoord2(outerSize / UVSize, outerSize / UVSize);
-            GL.Vertex3(outerSize, outerSize, height);
-
-            GL.Color4(1.0, 1.0, 1.0, soldAlpha);
-            GL.TexCoord2(innerSize / UVSize, innerSize / UVSize);
-            GL.Vertex3(innerSize, innerSize, height);
-
-            GL.TexCoord2(-innerSize / UVSize, innerSize / UVSize);
-            GL.Vertex3(-innerSize, innerSize, height);
-
-            // Y-
-            GL.Color4(1.0, 1.0, 1.0, soldAlpha);
-            GL.TexCoord2(-innerSize / UVSize, -innerSize / UVSize);
-            GL.Vertex3(-innerSize, -innerSize, height);
-
-            GL.TexCoord2(innerSize / UVSize, -innerSize / UVSize);
-            GL.Vertex3(innerSize, -innerSize, height);
-
-            GL.Color4(1.0, 1.0, 1.0, 0);
-            GL.TexCoord2(outerSize / UVSize, -outerSize / UVSize);
-            GL.Vertex3(outerSize, -outerSize, height);
-           
-            GL.TexCoord2(-outerSize / UVSize, -outerSize / UVSize);
-            GL.Vertex3(-outerSize, -outerSize, height);
-
-            GL.End();
             GL.Enable(EnableCap.Lighting);
+            buildingRenderer.Draw(new Vector3(10, 10, 0), new Vector3(5, 5, 5), 0);
 
-            GL.MatrixMode(MatrixMode.Texture);
-            GL.LoadIdentity();
-            GL.MatrixMode(MatrixMode.Modelview);
-
-            GL.Color4(1, 1, 1, 1.0);
-
+            Tank.Draw();
         }
 
         protected void DrawFlatGround()
@@ -320,11 +197,11 @@ namespace P51Movie
             walls.Bind();
             WallList.Call();
             Moutains.Draw();
-            DrawClouds();
+            Cloud.Draw();
         }
 
         double worldSize = 100;
-        double wallHeight = 2.5;
+        double wallHeight = 5;
         double floorZ = -0.01;
 
         void GrassList_Generate(object sender, DisplayList list)
@@ -366,7 +243,7 @@ namespace P51Movie
 
         void WallList_Generate(object sender, DisplayList list)
         {
-            double texSize = 2.5;
+            double texSize =5;
             GL.Begin(BeginMode.Quads);
                 
                 // X+
@@ -430,158 +307,6 @@ namespace P51Movie
                 GL.Vertex3(worldSize, -worldSize, floorZ);
 
             GL.End();
-        }
-
-        public class MoutainRenderer
-        {
-            public List<Texture> Tex = new List<Texture>();
-            public ListableEvent geometry;
-
-            public double RotIncrement = 0;
-            public double Radius = 800;
-            public double Height = 450;
-            public double Width = 0;
-
-            public MoutainRenderer(string path)
-            {
-                int i = 1;
-
-                while(true)
-                {
-                    string name = Path.Combine(path, "mountain" + i.ToString() + ".png");
-                    if (File.Exists(name))
-                    {
-                        Texture tex = TextureSystem.system.GetTexture(name);
-                        tex.Clamp = true;
-                        Tex.Add(tex);
-                        i++;
-                    }
-                    else
-                        break;
-                }
-
-                RotIncrement = 360.0 / (Tex.Count);
-            }
-
-            void list_Generate( int increment )
-            {
-                double fudge = 1.0;
-
-                double degRad = Math.PI / 180.0;
-                double thisAng = (RotIncrement * increment)*degRad;
-                double halfRot = (RotIncrement*0.5)*degRad;
-
-
-                double X1 = Math.Cos(thisAng+halfRot) * Radius * fudge;
-                double Y1 = Math.Sin(thisAng+halfRot) * Radius * fudge;
-
-                double X2 = Math.Cos(thisAng-halfRot) * Radius * fudge;
-                double Y2 = Math.Sin(thisAng-halfRot) * Radius * fudge;
-
-                GL.Begin(BeginMode.Quads);
-
-                    GL.Normal3(-1, 0, 0);
-
-                    GL.TexCoord2(0, 0);
-                    GL.Vertex3(X2, Y2, Height);
-
-                    GL.TexCoord2(1, 0);
-                    GL.Vertex3(X1, Y1, Height);
-
-                    GL.TexCoord2(1, 1);
-                    GL.Vertex3(X1, Y1, 0);
-
-                    GL.TexCoord2(0, 1);
-                    GL.Vertex3(X2, Y2, 0);
-
-                GL.End();
-            }
-
-            public void Draw ()
-            {
-                GL.Disable(EnableCap.Lighting);
-                GL.PushMatrix();
-                GL.Color4(Color.White);
-
-                GL.Translate(0, 0, -100.0);
-                for (int i = 0; i < Tex.Count; i++)
-                {
-                    Tex[i].Bind();
-                    list_Generate(i);
-                }
-                GL.Enable(EnableCap.Lighting);
-                GL.PopMatrix();
-            }
-        }
-
-        public class TankModel
-        {
-            public StaticModel mesh;
-            Texture skin, shadow;
-
-            float rotation = 0;
-            Vector3 position;
-
-            public TankModel( StaticModel m, Texture s, Texture sh )
-            {
-                mesh = m;
-                skin = s;
-                shadow = sh;
-            }
-
-            public void Update ( Vector3 pos, float rot )
-            {
-                rotation = rot;
-                position = pos;
-            }
-
-            public void Draw ()
-            {
-                GL.PushMatrix();
-                    GL.Translate(position.X, position.Y, position.Z + 0.01f);
-                    GL.Rotate(90, 1, 0, 0);
-                    GL.Rotate(rotation, 0, 1, 0);
-                    skin.Bind();
-                    mesh.drawAll(false);
-                GL.PopMatrix();
-
-                GL.PushMatrix();
-
-                    GL.Translate(position.X+0.5, position.Y-0.35, 0);
-                    GL.Rotate(rotation, 0, 0, 1);
-
-                    float shadowScale = 1.0f + (position.Z/40.0f);
-                    if (shadowScale > 3.0f)
-                        shadowScale = 3.0f;
-
-                    Vector2 shadowSize = new Vector2(4.8f * shadowScale, 2.8f * shadowScale);
-
-                    shadow.Bind();
-
-                    GL.Disable(EnableCap.Lighting);
-
-                        GL.Begin(BeginMode.Quads);
-                            GL.Color4(1.0, 1.0, 1.0, 0.75);
-                            GL.Normal3(0, 0, 1.0);
-
-                            GL.TexCoord2(0, 1.0);
-                            GL.Vertex2(-shadowSize.X, -shadowSize.Y);
-
-                            GL.TexCoord2(1.0, 1.0);
-                            GL.Vertex2(shadowSize.X, -shadowSize.Y);
-
-                            GL.TexCoord2(1.0, 0);
-                            GL.Vertex2(shadowSize.X, shadowSize.Y);
-
-                            GL.TexCoord2(0, 0);
-                            GL.Vertex2(-shadowSize.X, shadowSize.Y);
-
-                        GL.End();
-                    GL.Enable(EnableCap.Lighting);
-
-                GL.PopMatrix();
-                GL.Color4(1.0, 1.0, 1.0, 1.0);
-            }
         }
     }
 }

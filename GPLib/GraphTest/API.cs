@@ -385,6 +385,9 @@ namespace GraphTest
                 GL.Rotate(0, 0.0f, 1.0f, 0.0f);					// gets us on our rot
                 GL.Translate(0, 0, 0);	                        // take us to the pos
                 GL.Rotate(-90, 1.0f, 0.0f, 0.0f);				// gets us into XY
+
+                Vector4 lightPos = new Vector4(-5f, 5f, 25f, 1.0f);
+                GL.Light(LightName.Light0, LightParameter.Position, lightPos);
             }
             else
                 SetOrthographic();

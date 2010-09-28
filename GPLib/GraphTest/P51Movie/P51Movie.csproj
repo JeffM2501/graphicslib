@@ -47,8 +47,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Backgrounds.cs" />
+    <Compile Include="Buildings.cs" />
     <Compile Include="Module.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TankModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Drawables\Drawables.csproj">
