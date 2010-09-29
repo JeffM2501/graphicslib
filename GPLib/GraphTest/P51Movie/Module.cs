@@ -104,6 +104,8 @@ namespace P51Movie
     {
         List<PathDrivenTank> Tanks = new List<PathDrivenTank>();
 
+        Overlay TextOverlay = new Overlay();
+
         BZGround Ground;
         double LastUpdate = 0;
       
@@ -167,16 +169,50 @@ namespace P51Movie
             }           
         }
 
+        protected void LoadText ()
+        {
+            TextOverlay = new Overlay();
+
+            Overlay.OverlayDef seq = new Overlay.OverlayDef();
+            seq.Kind = Overlay.OverlayDef.OverlayKind.Delay;
+            seq.LifeTime = 3;
+            TextOverlay.Sequence.Add(seq);
+
+            seq = new Overlay.OverlayDef();
+            seq.Kind = Overlay.OverlayDef.OverlayKind.Cut;
+            seq.LifeTime = 10;
+            seq.Position = new Vector2(0, 0);// -API.Height*0.4f);
+            seq.TextColor = Color.White;
+            seq.Centered = true;
+            seq.CenterOrigin = true;
+            seq.Font = new Font(FontFamily.GenericSansSerif, 32.0f);
+            seq.Text = "Gameplay feel a little dated?";
+            TextOverlay.Sequence.Add(seq);
+
+            seq = new Overlay.OverlayDef();
+            seq.Kind = Overlay.OverlayDef.OverlayKind.Cut;
+            seq.LifeTime = 20;
+            seq.Position = new Vector2(0, 0);// -API.Height*0.4f);
+            seq.TextColor = Color.White;
+            seq.Centered = true;
+            seq.CenterOrigin = true;
+            seq.Font = new Font(FontFamily.GenericSansSerif, 42.0f);
+            seq.Text = "Tired of dancing around?";
+            TextOverlay.Sequence.Add(seq);
+        }
+
         public override void Load()
         {
             GL.ClearColor(Color.SkyBlue);
             Ground = new BZGround();
             Ground.Load();
             LoadTanks();
+            LoadText();
 
             TheModule.ViewPosition = new Vector3(0, -1, 2);
             TheModule.Spin = 45;
-            TheModule.Pullback = 10;
+            TheModule.Tilt = 15;
+            TheModule.Pullback = 50;
         }
 
         protected void DrawBackground(double time)
@@ -196,6 +232,8 @@ namespace P51Movie
 
             foreach(PathDrivenTank tank in Tanks)
                 tank.Update(time, delta);
+
+            TextOverlay.Update(time, delta);
             LastUpdate = time;
         }
 
@@ -209,6 +247,11 @@ namespace P51Movie
           
             foreach (PathDrivenTank tank in Tanks)
                 tank.Draw(time);
+        }
+
+        public override void DrawOverlay(double time)
+        {
+            TextOverlay.Draw(time);
         }
     }
 }

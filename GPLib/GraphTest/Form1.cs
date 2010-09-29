@@ -48,6 +48,9 @@ namespace GraphTest
 
         protected Dictionary<int, ModuleMenu> ModuleMenus = new Dictionary<int, ModuleMenu>();
 
+        bool UseFixedTime = false;
+        double FixedUpdateTime = 1.0/30.0;
+
         internal int AddMenu (string name, ViewAPI.MenuHandler handler, int parrent )
         {
             LastMenuID++;
@@ -82,7 +85,10 @@ namespace GraphTest
 
         protected void SetNow ()
         {
-            Now = RuntimeTimer.ElapsedMilliseconds / 1000.0;
+            if (UseFixedTime)
+                Now += FixedUpdateTime;
+            else
+                Now = RuntimeTimer.ElapsedMilliseconds / 1000.0;
         }
 
         protected void LoadModules ( Assembly dll )
@@ -190,12 +196,22 @@ namespace GraphTest
             }
 
             RuntimeTimer.Start();
-            SetNow();
-            StartTime = Now;
+            if (UseFixedTime)
+            {
+                StartTime = 0;
+                Now = 0;
+            }
+            else
+            {
+                SetNow();
+                StartTime = Now;
+            }
             
             FPSTimer.Tick += new EventHandler(FPSTimer_Tick);
             FPSTimer.Interval = (int)(1.0 / 30.0 * 1000.0);
             FPSTimer.Start();
+
+            SetGLTo(1280, 720);
         }
 
         void FPSTimer_Tick(object sender, EventArgs e)

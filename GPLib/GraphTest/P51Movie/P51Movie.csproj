@@ -32,6 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="OpenTK, Version=1.0.0.201, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL" />
+    <Reference Include="OpenTK.Compatibility, Version=1.0.0.201, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -51,6 +52,7 @@
     <Compile Include="Buildings.cs" />
     <Compile Include="BZGround.cs" />
     <Compile Include="Module.cs" />
+    <Compile Include="Overlays.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TankModel.cs" />
   </ItemGroup>
