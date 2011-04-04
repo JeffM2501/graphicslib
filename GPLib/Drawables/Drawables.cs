@@ -99,7 +99,7 @@ namespace Drawables
         {
             list = new ListableEvent();
             list.Generate += handler;
-            list.tag = tag;
+            list.Tag = tag;
             if (mat == null)
             {
                 mat = MaterialSystem.system.NewMaterial();

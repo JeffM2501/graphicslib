@@ -29,6 +29,8 @@ namespace Drawables.DisplayLists
     {
         int listID = -1;
 
+        public Object Tag = null;
+
         bool generating = false;
 
         public bool Valid ()
@@ -159,7 +161,11 @@ namespace Drawables.DisplayLists
         public delegate void GenerateEventHandler(object sender, DisplayList list);
         public event GenerateEventHandler Generate;
 
-        public object tag = null;
+        public object Tag
+        {
+            get { if (list != null) return list.Tag; else return null; }
+            set { if (list != null) list.Tag = value; }
+        }
 
         protected DisplayList list;
 
@@ -205,9 +211,6 @@ namespace Drawables.DisplayLists
                 GetSystem().deleteList(list);
                 list = null;
             }
-
-            if (tag != null)
-                tag = null;
         }
 
         public void Invalidate ()
