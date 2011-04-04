@@ -57,7 +57,7 @@ namespace ServerConfigurator
         [System.Xml.Serialization.XmlIgnoreAttribute]
         FileInfo configFile = null;
 
-        protected ServerConfig ()
+        public ServerConfig ()
         {
         }
 

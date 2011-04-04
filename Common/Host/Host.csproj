@@ -56,7 +56,7 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\lidgren-network\Lidgren.Network\Lidgren.Network.csproj">
+    <ProjectReference Include="..\..\graphicslib\Common\lidgren-network\Lidgren.Network\Lidgren.Network.csproj">
       <Project>{BA202214-F6F8-4853-BCC9-CA4F13C5F479}</Project>
       <Name>Lidgren.Network</Name>
     </ProjectReference>
