@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Reflection;
+using System.Drawing.Imaging;
 
 using Utilities.Paths;
 
@@ -50,6 +51,10 @@ namespace GraphTest
 
         bool UseFixedTime = false;
         double FixedUpdateTime = 1.0/30.0;
+
+        bool TakeScreenshots = false;
+        string ScreenshotFolder = string.Empty;
+        int ScreenShotCount = 0;
 
         internal int AddMenu (string name, ViewAPI.MenuHandler handler, int parrent )
         {
@@ -148,6 +153,7 @@ namespace GraphTest
             ResourceManager.AddPath(Path.Combine(Path.GetDirectoryName(md.path),"data"));
             ResourceManager.AddPath(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "data"));
 
+            API.Done = false;
             CurrentModule.Create(API);
             this.Text = CurrentModule.Name();
         }
@@ -217,14 +223,28 @@ namespace GraphTest
         void FPSTimer_Tick(object sender, EventArgs e)
         {
             SetNow();
-            if (CurrentModule != null)
-                CurrentModule.Update(Now-StartTime);
+            Draw();
         }
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
         {
-            if (CurrentModule != null)
+            Draw();
+        }
+
+        private void Draw()
+        {
+            if (CurrentModule != null && !API.Done)
+            {
                 CurrentModule.Update(Now - StartTime);
+                if (UseFixedTime && TakeScreenshots && Directory.Exists(ScreenshotFolder))
+                {
+                    string path = Path.Combine(ScreenshotFolder, ScreenShotCount.ToString() + ".png");
+                    if (File.Exists(path))
+                        File.Delete(path);
+
+                    glControl1.GrabScreenshot().Save(path, ImageFormat.Png);
+                }
+            }
         }
 
         private void glControl1_Resize(object sender, EventArgs e)

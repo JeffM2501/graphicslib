@@ -19,6 +19,8 @@ namespace GraphTest
 {
     public class ViewAPI
     {
+        public bool Done = false;
+
         internal Form1 form;
         internal ViewAPI (Form1 f)
         {
