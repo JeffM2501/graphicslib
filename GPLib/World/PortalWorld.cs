@@ -58,6 +58,18 @@ namespace World
             Bottom = new Vector3(v.Bottom);
             Top = v.Top;
         }
+
+        public CellVert(Vector3 b, float t)
+        {
+            Bottom = new Vector3(b);
+            Top = t;
+        }
+
+        public CellVert(float x, float y, float z, float height)
+        {
+            Bottom = new Vector3(x,y,z);
+            Top = z + height;
+        }
     }
 
     [Serializable]
@@ -95,6 +107,14 @@ namespace World
 
         public Vector2 UVScale = Vector2.One;
         public Vector2 UVShift = Vector2.Zero;
+
+        public CellMaterialInfo()
+        {}
+
+        public CellMaterialInfo(string material)
+        {
+            Material = material;
+        }
 
         public Vector2 GetFinalUV(float u, float v)
         {
@@ -191,6 +211,16 @@ namespace World
         public CellID Top = CellID.Empty;
 
         public LightmapInfo Lightmap = new LightmapInfo();
+
+        public CellWallGeometry()
+        {}
+
+        public CellWallGeometry(CellID top, CellID bottom, CellMaterialInfo mat)
+        {
+            Bottom = bottom;
+            Top = top;
+            Material = mat;
+        }
     }
 
     [Serializable]
@@ -224,6 +254,14 @@ namespace World
             foreach (PortalDestination dest in e.Destinations)
                 Destinations.Add(new PortalDestination(dest));
             Normal = new Vector2(e.Normal.X, e.Normal.Y);
+        }
+
+        public CellEdge( int start, int end, CellWallGeometry geo )
+        {
+            Start = start;
+            End = end;
+            EdgeType = CellEdgeType.Wall;
+            Geometry.Add(geo);
         }
     }
 
@@ -684,7 +722,7 @@ namespace World
         public Vector3 Postion = Vector3.Zero;
         public Vector3 Rotation = Vector3.Zero;
 
-        public List<CellID> cells;
+        public List<CellID> cells = new List<CellID>();
         public PortalMapAttributes ObjectAttributes = new PortalMapAttributes();
 
         public override string ToString()
