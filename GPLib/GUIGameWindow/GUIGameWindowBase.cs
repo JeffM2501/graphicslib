@@ -29,6 +29,7 @@ using System.Diagnostics;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Platform;
+using Input;
 
 namespace GUIGameWindow
 {
@@ -43,9 +44,15 @@ namespace GUIGameWindow
         double lastUpdateTime = 0;
         double lastFrameTime = 0;
 
-      
         public KeyboardDevice   Keyboard;
         public MouseDevice      Mouse;
+
+        protected InputManager InputInternal = null;
+
+        public InputManager InputMan
+        {
+            get { return InputInternal; }
+        }
 
         public class UpdateFrameArgs : EventArgs
         {
@@ -66,7 +73,6 @@ namespace GUIGameWindow
                 get { return timeDelta; }
                 internal set { timeDelta = value; }
             }
-
         }
 
         public class RenderFrameArgs : EventArgs
@@ -127,8 +133,10 @@ namespace GUIGameWindow
 
         protected void InitEvents ()
         {
-            Keyboard = new KeyboardDevice(glControl1);
-            Mouse = new MouseDevice(glControl1);
+            Keyboard = new GUIKeyboardDevice(glControl1);
+            Mouse = new GUIMouseDevice(glControl1);
+            InputInternal = new InputManager(Keyboard,Mouse);
+
             Application.Idle += new EventHandler(OnApplicationIdle);
         }
 

@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Drawing;
 
-namespace GUIGameWindow
+namespace Input
 {
     public struct MouseMoveEventArgs
     {
@@ -74,6 +74,7 @@ namespace GUIGameWindow
 
         public MouseButtons Buttons;
     } 
+
     public struct MouseButtonEventArgs
     {
         public MouseButtonEventArgs(MouseButtons b, bool down, Point pos)
@@ -106,6 +107,7 @@ namespace GUIGameWindow
         //     Gets the Y position of the mouse for the event.
         public int Y;
     }
+
     public struct MouseWheelEventArgs
     {
         //
@@ -159,125 +161,76 @@ namespace GUIGameWindow
     public delegate void MouseButtonEventHandler(object sender, MouseButtonEventArgs e);
     public delegate void MouseWheelEventHandler(object sender, MouseWheelEventArgs e);
 
-    public class MouseDevice
+    public abstract class MouseDevice
     {
         public event MouseButtonEventHandler ButtonDown;
         public event MouseButtonEventHandler ButtonUp;
         public event MouseMoveEventHandler Move;
         public event MouseWheelEventHandler WheelChanged;
 
-        Dictionary<MouseButtons, bool> buttonMap = new Dictionary<MouseButtons,bool>();
-
-        public bool this[MouseButtons button]
+        public virtual bool this[MouseButtons button]
         {
-            get 
-            {
-                if (!buttonMap.ContainsKey(button))
-                    return false;
-                else
-                    return buttonMap[button]; 
-            }
+            get { return false; }
         }
 
-        public int X
+        public virtual int X
         {
-            get { return lastPoint.X; }
+            get { return 0; }
         }
-        public int Y
+        public virtual int Y
         {
-            get { return lastPoint.Y; }
+            get { return 0; }
         }
-        public int XDelta
+        public virtual int XDelta
         {
-            get { return lastDelta.X; }
+            get { return 0; }
         }
-        public int YDelta
+        public virtual int YDelta
         {
-            get { return lastDelta.Y; }
+            get { return 0; }
         }
-
-        public int NumberOfButtons
+        public virtual int NumberOfButtons
         {
-            get { return 5; }
+            get { return 0; }
         }
-
-        public int NumberOfWheels
+        public virtual int NumberOfWheels
         {
-            get { return 1; }
+            get { return 0; }
         }
 
-        Point lastPoint = new Point(0, 0);
-        Point lastDelta = new Point(0, 0);
-        bool lastPointSet = false;
-
-        Control control = null;
-
-        int wheelCount = 0;
-        int lastWheelDelta = 0;
-
-        public MouseDevice(Control ctl)
+        public virtual void Capture ( bool cap )
         {
-            control = ctl;
-            ctl.MouseDown += new MouseEventHandler(InternalDown);
-            ctl.MouseUp += new MouseEventHandler(InternalUp);
-
-            ctl.MouseMove += new MouseEventHandler(InternalMove);
-            ctl.MouseWheel += new MouseEventHandler(InternalWheel);
         }
 
-        public void Capture ( bool cap )
+        public virtual void Hide()
         {
-            control.Capture = cap;
         }
 
-        public void Hide ( )
+        public virtual void Show()
         {
-            Cursor.Hide();
         }
 
-        public void Show ( )
+        protected void SendButton(MouseButtonEventArgs args, bool up)
         {
-            Cursor.Show();
+            if (up && ButtonUp != null)
+                ButtonUp(this,args);
+            else if (!up && ButtonDown != null)
+                ButtonDown(this,args);
         }
 
-        protected void InternalDown(Object sender, MouseEventArgs args)
+        protected void SendMove(MouseMoveEventArgs args)
         {
-            buttonMap[args.Button] = true;
-            if (ButtonDown != null)
-                ButtonDown(this, new MouseButtonEventArgs(args.Button, true, args.Location));
+            if (Move != null)
+                Move(this, args);
         }
 
-        protected void InternalUp(Object sender, MouseEventArgs args)
+        protected void SendWheel(MouseWheelEventArgs args)
         {
-            buttonMap[args.Button] = false;
-            if (ButtonUp != null)
-                ButtonUp(this, new MouseButtonEventArgs(args.Button, false, args.Location));
-        }
-
-        protected void InternalMove(Object sender, MouseEventArgs args)
-        {
-            if (lastPointSet)
-            {
-                lastDelta = new Point(args.Location.X - lastPoint.X,args.Location.Y - lastPoint.Y);
-                if (Move != null)
-                    Move(this, new MouseMoveEventArgs(args.Location.X, args.Location.Y, lastDelta.X, lastDelta.Y,args.Button));
-            }
-
-            lastPoint = new Point(args.Location.X,args.Location.Y);
-            lastPointSet = true;
-        }
-
-        protected void InternalWheel(Object sender, MouseEventArgs args)
-        {
-            lastWheelDelta = args.Delta;
-            wheelCount += args.Delta;
-
-            lastDelta = new Point(args.Location.X - lastPoint.X, args.Location.Y - lastPoint.Y);
-            lastPoint = new Point(args.Location.X, args.Location.Y);
-            lastPointSet = true;
-            
             if (WheelChanged != null)
-                WheelChanged(this,new MouseWheelEventArgs(args.Location.X,args.Location.Y,wheelCount,args.Delta));
+                WheelChanged(this, args);
         }
+
+      //  public event MouseMoveEventHandler Move;
+      //  public event MouseWheelEventHandler WheelChanged;
     }
 }
