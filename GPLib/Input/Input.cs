@@ -7,6 +7,13 @@ namespace Input
 {
     public class InputManager
     {
+        public enum AxisPesets
+        {
+            AnalogH = -1,
+            AnalogV = -2,
+            AnalogD = -3,
+        }
+
         protected KeyboardDevice Keyboard;
         protected MouseDevice Mouse;
 
@@ -24,9 +31,9 @@ namespace Input
             public event InputEvent Call;
         }
 
-        protected Dictionary<int, EventWraper > EventCallbacks = new Dictionary<int, EventWraper >;
-        protected Dictionary<Keys,List<int> > KeyToEventIDMap = new Dictionary<Keys,List<int> >;
-        protected Dictionary<MouseButtons,List<int> > ButtonToEventIDMap = new Dictionary<MouseButtons,List<int> >;
+        protected Dictionary<int, EventWraper > EventCallbacks = new Dictionary<int, EventWraper >();
+        protected Dictionary<Keys,List<int> > KeyToEventIDMap = new Dictionary<Keys,List<int> >();
+        protected Dictionary<MouseButtons, List<int>> ButtonToEventIDMap = new Dictionary<MouseButtons, List<int>>();
 
         protected class EventDeviceInfo
         {
@@ -36,11 +43,14 @@ namespace Input
                 MouseButtonEvent,
                 MouseWheelEvent,
                 MouseMovedEvent,
+                FakeAxisEvent,
             }
 
             public EventType Type = EventType.KeyPressEvent;
 
             public Keys Key = Keys.Enter;
+            public Keys NegGey = Keys.Escape;
+
             public MouseButtons Buttons = MouseButtons.Left;
             public int Axis = 0;
         }
@@ -62,11 +72,6 @@ namespace Input
             WheelCount += e.Delta;
         }
 
-        public void ProcessEvents()
-        {
-
-        }
-
         public Point GetCursorPos ()
         {
             return new Point(Mouse.X,Mouse.Y);
@@ -82,25 +87,47 @@ namespace Input
                 foreach (EventDeviceInfo infos in EventInfos[EventID])
                 {
                     int value = 0;
+                    float param = 0;
+
                     switch (infos.Type)
                     {
                         case EventDeviceInfo.EventType.KeyPressEvent:
-                           if (Keyboard[infos.Key])
+                            if (Keyboard[infos.Key])
+                            {
                                value = 1;
+                               param = 1.0f;
+                            }
                             break;
+
                         case EventDeviceInfo.EventType.MouseButtonEvent:
                             if (Mouse[infos.Buttons])
-                                value = 1;
-                             break;
+                            {
+                               value = 1;
+                               param = 1.0f;
+                            }
+                            break;
+
                         case EventDeviceInfo.EventType.MouseMovedEvent:
                             if (infos.Axis == 0)
                                 value = Mouse.X;
                             else
                                 value = Mouse.Y;
                             break;
+
                         case EventDeviceInfo.EventType.MouseWheelEvent:
                             value = WheelCount;
+                            break;
+
+                        case EventDeviceInfo.EventType.FakeAxisEvent:
+                            if (Keyboard[infos.Key] || !Keyboard[infos.NegGey])
+                                value = 10000;
+                            else if (!Keyboard[infos.Key] || Keyboard[infos.NegGey])
+                                value = -10000;
+                        break;
                     }
+
+                    if (Math.Abs(value) > args.Position)
+                        args.Position = value;
                 }
             }
 
@@ -126,20 +153,20 @@ namespace Input
         public void AddKeyEvent ( int EventID, Keys key )
         {
             if (!KeyToEventIDMap.ContainsKey(key))
-                KeyToEventIDMap.Add(key,new List<int>);
+                KeyToEventIDMap.Add(key,new List<int>());
 
             if (!KeyToEventIDMap[key].Contains(EventID))
                 KeyToEventIDMap[key].Add(EventID);
         }
 
-        public void AddKeyEvent ( int EventID, Keys key )
+     /*   public void AddKeyEvent ( int EventID, Keys key )
         {
             if (!KeyToEventIDMap.ContainsKey(key))
-                KeyToEventIDMap.Add(key,new List<int>);
+                KeyToEventIDMap.Add(key,new List<int>());
 
             if (!KeyToEventIDMap[key].Contains(EventID))
                 KeyToEventIDMap[key].Add(EventID);
-        }
+        } */
 
     }
 }
